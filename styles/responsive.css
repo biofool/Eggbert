@@ -1,0 +1,682 @@
+/* Responsive Design - styles/responsive.css */
+
+/* Large Desktop */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1400px;
+    }
+    
+    .sensor-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .metrics {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Standard Desktop */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .container {
+        max-width: 1100px;
+    }
+    
+    .metrics {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Tablet Landscape */
+@media (min-width: 768px) and (max-width: 991px) {
+    .container {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 1.8em;
+        margin-bottom: 15px;
+    }
+    
+    .mode-selector {
+        gap: 6px;
+        margin-bottom: 15px;
+    }
+    
+    .mode-btn {
+        padding: 6px 12px;
+        font-size: 0.8em;
+        min-width: 80px;
+    }
+    
+    .main-panel {
+        padding: 20px;
+    }
+    
+    .metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .sensor-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .device-placement {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .graph-container {
+        height: 180px;
+        padding: 12px;
+    }
+    
+    .score-circle {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .score-text {
+        font-size: 2em;
+    }
+    
+    .room-code {
+        font-size: 1.8em;
+        letter-spacing: 4px;
+        padding: 15px;
+    }
+}
+
+/* Tablet Portrait */
+@media (min-width: 576px) and (max-width: 767px) {
+    body {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 1.6em;
+        margin-bottom: 15px;
+    }
+    
+    .mode-selector {
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: center;
+    }
+    
+    .mode-btn {
+        padding: 6px 10px;
+        font-size: 0.75em;
+        min-width: 70px;
+        flex: 1;
+        max-width: 90px;
+    }
+    
+    .main-panel {
+        padding: 18px;
+        border-radius: 12px;
+    }
+    
+    .controls {
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .control-btn {
+        padding: 8px 15px;
+        font-size: 0.8em;
+        min-width: 90px;
+        flex: 1;
+        max-width: 120px;
+    }
+    
+    .metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .metric-card {
+        padding: 12px;
+    }
+    
+    .metric-value {
+        font-size: 1.5em;
+    }
+    
+    .sensor-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .sensor-data {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    
+    .axis-data {
+        padding: 10px;
+    }
+    
+    .axis-value {
+        font-size: 1.1em;
+    }
+    
+    .device-placement {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .placement-card {
+        padding: 15px;
+    }
+    
+    .placement-icon {
+        font-size: 2em;
+    }
+    
+    .graph-container {
+        height: 160px;
+        padding: 10px;
+    }
+    
+    .realtime-graph {
+        height: 100px;
+    }
+    
+    .score-circle {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .score-text {
+        font-size: 1.8em;
+    }
+    
+    .room-code {
+        font-size: 1.5em;
+        letter-spacing: 3px;
+        padding: 12px;
+    }
+    
+    .log-container {
+        max-height: 300px;
+        padding: 12px;
+        font-size: 0.8em;
+    }
+    
+    .data-export .export-btn {
+        margin: 4px 6px;
+        padding: 10px 15px;
+        font-size: 0.8em;
+    }
+}
+
+/* Mobile Landscape */
+@media (min-width: 480px) and (max-width: 575px) {
+    body {
+        padding: 10px;
+    }
+    
+    header h1 {
+        font-size: 1.4em;
+        margin-bottom: 12px;
+    }
+    
+    .mode-selector {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .mode-btn {
+        padding: 5px 8px;
+        font-size: 0.7em;
+        min-width: 60px;
+        border-radius: 15px;
+    }
+    
+    .mode-btn i {
+        font-size: 0.7em;
+    }
+    
+    .main-panel {
+        padding: 15px;
+        border-radius: 10px;
+    }
+    
+    .device-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        text-align: left;
+    }
+    
+    .device-name {
+        font-size: 1.1em;
+    }
+    
+    .calibration-info,
+    .capabilities-info {
+        padding: 12px;
+        font-size: 0.8em;
+    }
+    
+    .controls {
+        gap: 6px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .control-btn {
+        padding: 10px 15px;
+        font-size: 0.8em;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .metrics {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .metric-card {
+        padding: 10px;
+    }
+    
+    .metric-label {
+        font-size: 0.7em;
+    }
+    
+    .metric-value {
+        font-size: 1.3em;
+    }
+    
+    .sensor-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .sensor-panel {
+        padding: 15px;
+    }
+    
+    .sensor-data {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    
+    .axis-data {
+        padding: 8px;
+    }
+    
+    .axis-label {
+        font-size: 0.7em;
+    }
+    
+    .axis-value {
+        font-size: 1em;
+    }
+    
+    .device-placement {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .placement-card {
+        padding: 12px;
+    }
+    
+    .placement-icon {
+        font-size: 1.8em;
+    }
+    
+    .placement-title {
+        font-size: 0.9em;
+    }
+    
+    .placement-desc {
+        font-size: 0.75em;
+    }
+    
+    .graph-container {
+        height: 140px;
+        padding: 8px;
+    }
+    
+    .realtime-graph {
+        height: 80px;
+    }
+    
+    .score-display {
+        margin: 20px 0;
+    }
+    
+    .score-circle {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .score-text {
+        font-size: 1.5em;
+    }
+    
+    .room-code {
+        font-size: 1.3em;
+        letter-spacing: 2px;
+        padding: 10px;
+    }
+    
+    .log-container {
+        max-height: 250px;
+        padding: 10px;
+        font-size: 0.75em;
+    }
+    
+    .data-export {
+        padding: 15px;
+    }
+    
+    .data-export .export-btn {
+        margin: 3px 4px;
+        padding: 8px 12px;
+        font-size: 0.75em;
+        display: block;
+        width: 100%;
+        margin-bottom: 6px;
+    }
+}
+
+/* Mobile Portrait */
+@media (max-width: 479px) {
+    body {
+        padding: 8px;
+    }
+    
+    header h1 {
+        font-size: 1.3em;
+        margin-bottom: 10px;
+    }
+    
+    .mode-selector {
+        flex-direction: column;
+        gap: 4px;
+        align-items: stretch;
+    }
+    
+    .mode-btn {
+        padding: 8px 12px;
+        font-size: 0.8em;
+        width: 100%;
+        border-radius: 8px;
+        justify-content: center;
+    }
+    
+    .main-panel {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .main-panel h2 {
+        font-size: 1.3em;
+        margin-bottom: 15px;
+    }
+    
+    .device-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .calibration-info,
+    .capabilities-info {
+        padding: 10px;
+        font-size: 0.8em;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .capabilities-list li {
+        font-size: 0.8em;
+        margin-bottom: 6px;
+    }
+    
+    .controls {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+    
+    .control-btn {
+        padding: 12px 15px;
+        font-size: 0.8em;
+        width: 100%;
+    }
+    
+    .metrics {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .metric-card {
+        padding: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+    
+    .metric-label {
+        font-size: 0.8em;
+        margin-bottom: 0;
+    }
+    
+    .metric-value {
+        font-size: 1.5em;
+    }
+    
+    .sensor-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .sensor-panel {
+        padding: 12px;
+    }
+    
+    .sensor-title {
+        font-size: 1em;
+        margin-bottom: 10px;
+    }
+    
+    .sensor-data {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .axis-data {
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+    
+    .axis-value {
+        font-size: 1.2em;
+        margin-bottom: 0;
+    }
+    
+    .device-placement {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .placement-card {
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        text-align: left;
+        gap: 12px;
+    }
+    
+    .placement-icon {
+        font-size: 1.5em;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+    
+    .placement-content {
+        flex: 1;
+    }
+    
+    .placement-title {
+        font-size: 0.9em;
+        margin-bottom: 4px;
+    }
+    
+    .placement-desc {
+        font-size: 0.75em;
+    }
+    
+    .graph-container {
+        height: 120px;
+        padding: 8px;
+        margin: 15px 0;
+    }
+    
+    .realtime-graph {
+        height: 70px;
+    }
+    
+    .score-display {
+        margin: 15px 0;
+    }
+    
+    .score-circle {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .score-text {
+        font-size: 1.3em;
+    }
+    
+    .score-label {
+        font-size: 0.8em;
+        margin-top: 6px;
+    }
+    
+    .room-code {
+        font-size: 1.1em;
+        letter-spacing: 1px;
+        padding: 8px;
+    }
+    
+    .room-description {
+        font-size: 0.8em;
+        margin-bottom: 15px;
+    }
+    
+    .sync-indicator {
+        padding: 8px;
+        font-size: 0.8em;
+    }
+    
+    .log-container {
+        max-height: 200px;
+        padding: 8px;
+        font-size: 0.7em;
+    }
+    
+    .log-entry {
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+    
+    .log-timestamp {
+        font-size: 0.75em;
+    }
+    
+    .data-export {
+        padding: 12px;
+    }
+    
+    .data-export .export-btn {
+        display: block;
+        width: 100%;
+        margin: 0 0 8px 0;
+        padding: 10px 15px;
+        font-size: 0.8em;
+    }
+    
+    /* Session history table adjustments */
+    .session-table {
+        font-size: 0.7em;
+    }
+    
+    .session-table th,
+    .session-table td {
+        padding: 6px 8px;
+    }
+    
+    .average-score {
+        padding: 15px;
+    }
+    
+    .average-score .score-label {
+        font-size: 1em;
+    }
+    
+    .average-score .score-value {
+        font-size: 2.5em;
+    }
+}
+
+/* Ultra-wide screens */
+@media (min-width: 1400px) {
+    .sensor-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .metrics {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        background: white;
+        color: black;
+        padding: 0;
+    }
+    
+    .mode-selector,
+    .controls,
+    .data-export {
+        display: none;
+    }
+    
+    .main-panel {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+    
+    .metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .sensor-grid {
+        grid-template-columns: 1fr;
+    }
+}
