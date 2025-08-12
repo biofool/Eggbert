@@ -1,22 +1,50 @@
 // Main Application Logic - js/main.js
 
-// Global application state
+// // Global application state
+// const AppState = {
+//     accelerationData: [],
+//     isRecording: false,
+//     startTime: null,
+//     animationId: null,
+//     currentMode: 'single',
+//     roomCode: generateRoomCode(),
+//     connectedDevices: 1,
+//     sessionHistory: [],
+//     systemLogs: [],
+//     sensorData: [],
+//     isSensorMonitoring: false,
+//     sensorGraphs: {},
+//     previousAcceleration: { x: 0, y: 0, z: 0, timestamp: 0 }
+// };
+// In main.js, update the AppState object:
 const AppState = {
     accelerationData: [],
     isRecording: false,
     startTime: null,
     animationId: null,
     currentMode: 'single',
-    roomCode: generateRoomCode(),
+    _roomCode: null,  // Use getter/setter pattern
+    get roomCode() {
+        if (!this._roomCode) {
+            this._roomCode = typeof generateRoomCode === 'function' ?
+                generateRoomCode() : 'TEMP';
+        }
+        return this._roomCode;
+    },
+    set roomCode(value) {
+        this._roomCode = value;
+    },
     connectedDevices: 1,
     sessionHistory: [],
     systemLogs: [],
     sensorData: [],
     isSensorMonitoring: false,
     sensorGraphs: {},
-    previousAcceleration: { x: 0, y: 0, z: 0, timestamp: 0 }
+    previousAcceleration: { x: 0, y: 0, z: 0, timestamp: 0 },
+    charts: {  // Add this
+        acceleration: null
+    }
 };
-
 // Application initialization
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Roll Smoothness Analyzer - Initializing...');
@@ -229,4 +257,78 @@ async function requestMotionPermission() {
     }
     return true; // Permission not required
 }
+// Add these functions to main.js
 
+function initCanvas() {
+    initAccelerationChart();
+}
+
+function drawGraph() {
+    updateAccelerationChart();
+}
+
+function animate() {
+    if (AppState.isRecording) {
+        updateAccelerationChart();
+        AppState.animationId = requestAnimationFrame(animate);
+    }
+}
+
+function setMode(mode) {
+    AppState.currentMode = mode;
+
+    // Hide all panels
+    document.querySelectorAll('.main-panel').forEach(panel => {
+        panel.style.display = 'none';
+    });
+
+    // Show selected panel
+    const panelId = mode + 'Mode';
+    const panel = document.getElementById(panelId);
+    if (panel) {
+        panel.style.display = 'block';
+    }
+
+    // Update active button
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Find the button that was clicked
+    const clickedBtn = document.querySelector(`.mode-btn[onclick*="${mode}"]`);
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    }
+
+    // Trigger mode-specific actions
+    if (mode === 'coach') {
+        displaySessionHistory();
+    } else if (mode === 'logs') {
+        updateLogsDisplay();
+    }
+
+    addLog('UI', `Switched to ${mode} mode`);
+}
+
+function startMultiRecording() {
+    if (AppState.isRecording) return;
+    showNotification('Starting synchronized recording...', 'info');
+    startRecording();
+    addLog('Multi-device', `Started synchronized recording for room: ${AppState.roomCode}`);
+}
+
+function stopMultiRecording() {
+    if (!AppState.isRecording) return;
+    stopRecording();
+    addLog('Multi-device', 'Stopped synchronized recording');
+}
+
+function generateRoom() {
+    AppState.roomCode = generateRoomCode();
+    const roomCodeElement = document.getElementById('roomCode');
+    if (roomCodeElement) {
+        roomCodeElement.textContent = AppState.roomCode;
+    }
+    showNotification(`New room code: ${AppState.roomCode}`, 'success');
+    addLog('Multi-device', `Generated new room code: ${AppState.roomCode}`);
+}
