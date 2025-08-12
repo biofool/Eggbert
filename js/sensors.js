@@ -1,5 +1,9 @@
 // Sensor Management - js/sensors.js
 
+// Store references to throttled handlers at module level
+let throttledMotionHandler = null;
+let throttledOrientationHandler = null;
+
 /**
  * Initialize sensor monitoring graphs
  */
@@ -192,19 +196,27 @@ function startSensorMonitoring() {
  * Start device sensor event listeners
  */
 function startSensorListeners() {
+    // Create throttled handlers if they don't exist
+    if (!throttledMotionHandler) {
+        throttledMotionHandler = throttle(handleSensorMotionCore, 50);
+    }
+    if (!throttledOrientationHandler) {
+        throttledOrientationHandler = throttle(handleSensorOrientationCore, 100);
+    }
+
     // Device motion (accelerometer + gyroscope)
-    window.addEventListener('devicemotion', handleSensorMotion);
+    window.addEventListener('devicemotion', throttledMotionHandler);
 
     // Device orientation
-    window.addEventListener('deviceorientation', handleSensorOrientation);
+    window.addEventListener('deviceorientation', throttledOrientationHandler);
 
     addLog('Sensors', 'Device motion and orientation listeners activated');
 }
 
 /**
- * Handle device motion events (accelerometer + gyroscope)
+ * Core handler for device motion events (not throttled)
  */
-const handleSensorMotion = throttle((event) => {
+function handleSensorMotionCore(event) {
     if (!AppState.isSensorMonitoring) return;
 
     const acc = event.accelerationIncludingGravity;
@@ -251,6 +263,9 @@ const handleSensorMotion = throttle((event) => {
     }
 
     // Store sensor data
+    const magnitude = parseFloat(document.getElementById('magnitude').textContent || 0);
+    const angularMagnitude = parseFloat(document.getElementById('angular').textContent || 0);
+
     AppState.sensorData.push({
         timestamp: timestamp,
         acceleration: {
@@ -271,12 +286,12 @@ const handleSensorMotion = throttle((event) => {
     if (AppState.sensorData.length > 10000) {
         AppState.sensorData = AppState.sensorData.slice(-5000);
     }
-}, 50); // Throttle to 20Hz
+}
 
 /**
- * Handle device orientation events
+ * Core handler for device orientation events (not throttled)
  */
-const handleSensorOrientation = throttle((event) => {
+function handleSensorOrientationCore(event) {
     if (!AppState.isSensorMonitoring) return;
 
     // Update orientation display
@@ -296,7 +311,7 @@ const handleSensorOrientation = throttle((event) => {
     const jerk = parseFloat(document.getElementById('jerk').textContent || 0);
     const angular = parseFloat(document.getElementById('angular').textContent || 0);
     updateSensorGraph('derivedGraph', magnitude, jerk / 10, angular);
-}, 100); // Throttle to 10Hz
+}
 
 /**
  * Calculate jerk (rate of change of acceleration)
@@ -305,7 +320,7 @@ function calculateJerk(currentAcc, previousAcc, currentTime) {
     if (!previousAcc.timestamp) return 0;
 
     const dt = (currentTime - previousAcc.timestamp) / 1000; // Convert to seconds
-    if (dt <= 0) return 0;
+    if (dt <= 0 || dt > 1) return 0; // Ignore if no time passed or too much time
 
     const jerkX = Math.abs((currentAcc.x || 0) - previousAcc.x) / dt;
     const jerkY = Math.abs((currentAcc.y || 0) - previousAcc.y) / dt;
@@ -328,9 +343,13 @@ function stopSensorMonitoring() {
     if (startBtn) startBtn.disabled = false;
     if (stopBtn) stopBtn.disabled = true;
 
-    // Remove event listeners
-    window.removeEventListener('devicemotion', handleSensorMotion);
-    window.removeEventListener('deviceorientation', handleSensorOrientation);
+    // Remove event listeners using the stored references
+    if (throttledMotionHandler) {
+        window.removeEventListener('devicemotion', throttledMotionHandler);
+    }
+    if (throttledOrientationHandler) {
+        window.removeEventListener('deviceorientation', throttledOrientationHandler);
+    }
 
     addLog('Sensor monitoring', `Stopped monitoring. Collected ${AppState.sensorData.length} data points`);
     showNotification(`Monitoring stopped. Collected ${AppState.sensorData.length} data points`, 'info');
@@ -341,7 +360,7 @@ function stopSensorMonitoring() {
  */
 function resetSensorData() {
     AppState.sensorData = [];
-    AppState.previousAcceleration = { x: 0, y: 0, z: 0 };
+    AppState.previousAcceleration = { x: 0, y: 0, z: 0, timestamp: 0 };
 
     // Reset all displays
     const sensorIds = [

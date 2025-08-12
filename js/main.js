@@ -129,29 +129,31 @@ function checkDeviceCapabilities() {
 /**
  * Setup permission requests for iOS 13+
  */
+// In main.js, update setupPermissions:
 function setupPermissions() {
-    const requestPermission = () => {
-        if (typeof DeviceMotionEvent.requestPermission === 'function') {
-            DeviceMotionEvent.requestPermission()
-                .then(permissionState => {
-                    if (permissionState === 'granted') {
-                        addLog('Permission', 'DeviceMotionEvent permission granted.');
-                    } else {
-                        addLog('Permission', 'DeviceMotionEvent permission denied.');
-                        showNotification('Motion sensor access is required for the app to function.', 'error');
-                    }
-                })
-                .catch(error => {
-                    addLog('Permission Error', error.message);
-                    console.error(error);
-                });
-        }
-    };
-    // Add a listener to a user-initiated event, like a button click
-    // For simplicity, we'll add it to the start button itself in the HTML or via another script.
-    // Example: document.querySelector('.start-btn').addEventListener('click', requestPermission, { once: true });
-}
+    // For iOS 13+, attach permission request to user interactions
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        // Remove any existing listeners first
+        document.querySelectorAll('.start-btn').forEach(btn => {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+        });
 
+        // Add one-time permission request to all start buttons
+        document.querySelectorAll('.start-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const permissionState = await DeviceMotionEvent.requestPermission();
+                if (permissionState === 'granted') {
+                    addLog('Permission', 'Motion permission granted');
+                } else {
+                    addLog('Permission', 'Motion permission denied');
+                    showNotification('Motion permission required', 'error');
+                    e.stopImmediatePropagation();
+                }
+            }, { once: true });
+        });
+    }
+}
 /**
  * Save application state to localStorage
  */
