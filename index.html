@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roll Smoothness Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .mode-btn.active {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .main-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .device-section {
+            margin-bottom: 30px;
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .device-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status-ready {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-recording {
+            background: #ff5722;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-waiting {
+            background: #ffc107;
+            color: #333;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .graph-container {
+            position: relative;
+            height: 200px;
+            margin: 20px 0;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .stop-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .reset-btn {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .metric-unit {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .score-display {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .score-circle svg {
+            transform: rotate(-90deg);
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .score-label {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .calibration-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .sync-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4caf50;
+            animation: sync-pulse 2s infinite;
+        }
+
+        @keyframes sync-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+
+        .room-code {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .device-placement {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .placement-card {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px dashed #ccc;
+        }
+
+        .placement-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .placement-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .placement-desc {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .mode-selector {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥋 Roll Smoothness Analyzer</h1>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="setMode('single')">Single Device</button>
+            <button class="mode-btn" onclick="setMode('multi')">Multi-Device Sync</button>
+            <button class="mode-btn" onclick="setMode('coach')">Coach View</button>
+        </div>
+
+        <!-- Single Device Mode -->
+        <div id="singleMode" class="main-panel">
+            <div class="device-section">
+                <div class="device-header">
+                    <span class="device-name">📱 This Device</span>
+                    <span class="status-badge status-waiting" id="status">Ready</span>
+                </div>
+
+                <div class="calibration-info">
+                    <strong>Setup Instructions:</strong><br>
+                    Secure the phone to your body (belt, armband, or pocket). Press START and perform your roll within 10 seconds.
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn start-btn" onclick="startRecording()">▶ START</button>
+                    <button class="control-btn stop-btn" onclick="stopRecording()" disabled>⏹ STOP</button>
+                    <button class="control-btn reset-btn" onclick="resetData()">↺ RESET</button>
+                </div>
+
+                <div class="graph-container">
+                    <canvas id="accelerationGraph"></canvas>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-label">Peak Force</div>
+                        <div class="metric-value" id="peakForce">0</div>
+                        <div class="metric-unit">G</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Smoothness</div>
+                        <div class="metric-value" id="smoothness">--</div>
+                        <div class="metric-unit">%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Roll Time</div>
+                        <div class="metric-value" id="rollTime">0</div>
+                        <div class="metric-unit">sec</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Jerk Index</div>
+                        <div class="metric-value" id="jerkIndex">0</div>
+                        <div class="metric-unit">m/s³</div>
+                    </div>
+                </div>
+
+                <div class="score-display">
+                    <div class="score-circle">
+                        <svg width="200" height="200">
+                            <circle cx="100" cy="100" r="90" stroke="#e0e0e0" stroke-width="20" fill="none"></circle>
+                            <circle id="scoreCircle" cx="100" cy="100" r="90" stroke="#4caf50" stroke-width="20" fill="none"
+                                    stroke-dasharray="565" stroke-dashoffset="565" stroke-linecap="round"></circle>
+                        </svg>
+                        <div class="score-text" id="overallScore">--</div>
+                    </div>
+                    <div class="score-label">Overall Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multi-Device Mode -->
+        <div id="multiMode" class="main-panel" style="display: none;">
+            <div class="room-code" id="roomCode">----</div>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                Share this code with other devices to sync measurements
+            </p>
+
+            <div class="device-placement">
+                <div class="placement-card">
+                    <div class="placement-icon">📱</div>
+                    <div class="placement-title">Device 1: Hip</div>
+                    <div class="placement-desc">Attach to belt or waistband at center of mass</div>
+                </div>
+                <div class="placement-card">
+                    <div class="placement-icon">📱</div>
+                    <div class="placement-title">Device 2: Shoulder</div>
+                    <div class="placement-desc">Secure to upper arm or shoulder strap</div>
+                </div>
+                <div class="placement-card">
+                    <div class="placement-icon">📱</div>
+                    <div class="placement-title">Device 3: Ankle</div>
+                    <div class="placement-desc">Attach to ankle or lower leg (optional)</div>
+                </div>
+            </div>
+
+            <div class="sync-indicator">
+                <div class="sync-dot"></div>
+                <span>Devices Connected: <strong id="deviceCount">1</strong></span>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn start-btn" onclick="startMultiRecording()">▶ START ALL</button>
+                <button class="control-btn stop-btn" onclick="stopMultiRecording()" disabled>⏹ STOP ALL</button>
+                <button class="control-btn reset-btn" onclick="generateRoom()">🔄 NEW ROOM</button>
+            </div>
+
+            <div id="multiDeviceGraphs"></div>
+        </div>
+
+        <!-- Coach View -->
+        <div id="coachMode" class="main-panel" style="display: none;">
+            <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">Session History</h2>
+            <div id="sessionHistory"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let accelerationData = [];
+        let isRecording = false;
+        let startTime = null;
+        let animationId = null;
+        let currentMode = 'single';
+        let roomCode = generateRoomCode();
+        let connectedDevices = 1;
+        let sessionHistory = [];
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAccelerometerSupport();
+            initCanvas();
+            loadSessionHistory();
+        });
+
+        function checkAccelerometerSupport() {
+            if ('DeviceMotionEvent' in window) {
+                // Check if we need permission (iOS 13+)
+                if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                    document.querySelector('.start-btn').addEventListener('click', () => {
+                        DeviceMotionEvent.requestPermission()
+                            .then(response => {
+                                if (response == 'granted') {
+                                    console.log('Accelerometer permission granted');
+                                }
+                            })
+                            .catch(console.error);
+                    });
+                }
+            } else {
+                alert('Device motion is not supported on this device/browser');
+            }
+        }
+
+        function generateRoomCode() {
+            return Math.random().toString(36).substring(2, 6).toUpperCase();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide panels
+            document.getElementById('singleMode').style.display = mode === 'single' ? 'block' : 'none';
+            document.getElementById('multiMode').style.display = mode === 'multi' ? 'block' : 'none';
+            document.getElementById('coachMode').style.display = mode === 'coach' ? 'block' : 'none';
+            
+            if (mode === 'multi') {
+                document.getElementById('roomCode').textContent = roomCode;
+                simulateMultiDevice();
+            } else if (mode === 'coach') {
+                displaySessionHistory();
+            }
+        }
+
+        function startRecording() {
+            if (!isRecording) {
+                isRecording = true;
+                accelerationData = [];
+                startTime = Date.now();
+                
+                // Update UI
+                document.getElementById('status').textContent = 'Recording';
+                document.getElementById('status').className = 'status-badge status-recording';
+                document.querySelector('.start-btn').disabled = true;
+                document.querySelector('.stop-btn').disabled = false;
+                
+                // Start listening to accelerometer
+                window.addEventListener('devicemotion', handleMotion);
+                
+                // Auto-stop after 10 seconds
+                setTimeout(() => {
+                    if (isRecording) {
+                        stopRecording();
+                    }
+                }, 10000);
+                
+                // Start animation
+                animate();
+            }
+        }
+
+        function stopRecording() {
+            if (isRecording) {
+                isRecording = false;
+                
+                // Update UI
+                document.getElementById('status').textContent = 'Processing';
+                document.getElementById('status').className = 'status-badge status-waiting';
+                document.querySelector('.start-btn').disabled = false;
+                document.querySelector('.stop-btn').disabled = true;
+                
+                // Stop listening
+                window.removeEventListener('devicemotion', handleMotion);
+                
+                // Cancel animation
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+                
+                // Analyze data
+                analyzeRoll();
+            }
+        }
+
+        function handleMotion(event) {
+            if (isRecording && event.accelerationIncludingGravity) {
+                const acc = event.accelerationIncludingGravity;
+                const magnitude = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z) / 9.81; // Convert to G
+                
+                accelerationData.push({
+                    time: Date.now() - startTime,
+                    x: acc.x / 9.81,
+                    y: acc.y / 9.81,
+                    z: acc.z / 9.81,
+                    magnitude: magnitude
+                });
+            }
+        }
+
+        function analyzeRoll() {
+            if (accelerationData.length < 10) {
+                alert('Not enough data collected. Please try again.');
+                resetData();
+                return;
+            }
+            
+            // Calculate metrics
+            const peakForce = Math.max(...accelerationData.map(d => d.magnitude));
+            const avgForce = accelerationData.reduce((sum, d) => sum + d.magnitude, 0) / accelerationData.length;
+            const rollTime = (accelerationData[accelerationData.length - 1].time - accelerationData[0].time) / 1000;
+            
+            // Calculate jerk (rate of change of acceleration)
+            let totalJerk = 0;
+            for (let i = 1; i < accelerationData.length; i++) {
+                const dt = (accelerationData[i].time - accelerationData[i-1].time) / 1000;
+                if (dt > 0) {
+                    const jerk = Math.abs(accelerationData[i].magnitude - accelerationData[i-1].magnitude) / dt;
+                    totalJerk += jerk;
+                }
+            }
+            const avgJerk = totalJerk / (accelerationData.length - 1);
+            
+            // Calculate smoothness score (inverse of jerk, normalized)
+            const maxAcceptableJerk = 50; // m/s³
+            const smoothness = Math.max(0, Math.min(100, 100 * (1 - avgJerk / maxAcceptableJerk)));
+            
+            // Calculate overall score
+            const peakScore = Math.max(0, 100 - Math.abs(peakForce - 1.5) * 50); // Ideal peak around 1.5G
+            const smoothnessScore = smoothness;
+            const timeScore = Math.max(0, 100 - Math.abs(rollTime - 1.5) * 30); // Ideal time around 1.5s
+            
+            const overallScore = Math.round((peakScore * 0.3 + smoothnessScore * 0.5 + timeScore * 0.2));
+            
+            // Update UI
+            document.getElementById('peakForce').textContent = peakForce.toFixed(2);
+            document.getElementById('smoothness').textContent = Math.round(smoothness);
+            document.getElementById('rollTime').textContent = rollTime.toFixed(2);
+            document.getElementById('jerkIndex').textContent = avgJerk.toFixed(1);
+            document.getElementById('overallScore').textContent = overallScore;
+            
+            // Animate score circle
+            const circle = document.getElementById('scoreCircle');
+            const circumference = 2 * Math.PI * 90;
+            const offset = circumference - (overallScore / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            // Set color based on score
+            if (overallScore >= 80) {
+                circle.style.stroke = '#4caf50';
+            } else if (overallScore >= 60) {
+                circle.style.stroke = '#ffc107';
+            } else {
+                circle.style.stroke = '#f44336';
+            }
+            
+            // Update status
+            document.getElementById('status').textContent = 'Complete';
+            document.getElementById('status').className = 'status-badge status-ready';
+            
+            // Save to history
+            saveSession({
+                timestamp: new Date().toISOString(),
+                score: overallScore,
+                metrics: {
+                    peakForce: peakForce.toFixed(2),
+                    smoothness: Math.round(smoothness),
+                    rollTime: rollTime.toFixed(2),
+                    jerkIndex: avgJerk.toFixed(1)
+                }
+            });
+            
+            // Draw final graph
+            drawGraph();
+        }
+
+        function initCanvas() {
+            const canvas = document.getElementById('accelerationGraph');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // Draw initial grid
+            drawGrid(ctx, canvas);
+        }
+
+        function drawGrid(ctx, canvas) {
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            // Horizontal lines
+            for (let i = 0; i <= 4; i++) {
+                const y = (canvas.height / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Vertical lines
+            for (let i = 0; i <= 10; i++) {
+                const x = (canvas.width / 10) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+        }
+
+        function drawGraph() {
+            const canvas = document.getElementById('accelerationGraph');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid(ctx, canvas);
+            
+            if (accelerationData.length < 2) return;
+            
+            // Scale factors
+            const timeScale = canvas.width / (accelerationData[accelerationData.length - 1].time);
+            const forceScale = canvas.height / 4; // Max 4G display
+            
+            // Draw magnitude line
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            accelerationData.forEach((point, index) => {
+                const x = point.time * timeScale;
+                const y = canvas.height - (point.magnitude * forceScale);
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // Draw axis lines (X, Y, Z) if detailed view
+            if (accelerationData.length < 500) {
+                // X-axis in red
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                accelerationData.forEach((point, index) => {
+                    const x = point.time * timeScale;
+                    const y = canvas.height/2 - (point.x * forceScale/2);
+                    if (index === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+                
+                // Y-axis in green
+                ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+                ctx.beginPath();
+                accelerationData.forEach((point, index) => {
+                    const x = point.time * timeScale;
+                    const y = canvas.height/2 - (point.y * forceScale/2);
+                    if (index === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+                
+                // Z-axis in blue
+                ctx.strokeStyle = 'rgba(0, 0, 255, 0.5)';
+                ctx.beginPath();
+                accelerationData.forEach((point, index) => {
+                    const x = point.time * timeScale;
+                    const y = canvas.height/2 - (point.z * forceScale/2);
+                    if (index === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            if (isRecording) {
+                drawGraph();
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        function resetData() {
+            accelerationData = [];
+            isRecording = false;
+            
+            // Reset UI
+            document.getElementById('status').textContent = 'Ready';
+            document.getElementById('status').className = 'status-badge status-waiting';
+            document.querySelector('.start-btn').disabled = false;
+            document.querySelector('.stop-btn').disabled = true;
+            
+            // Reset metrics
+            document.getElementById('peakForce').textContent = '0';
+            document.getElementById('smoothness').textContent = '--';
+            document.getElementById('rollTime').textContent = '0';
+            document.getElementById('jerkIndex').textContent = '0';
+            document.getElementById('overallScore').textContent = '--';
+            
+            // Reset score circle
+            document.getElementById('scoreCircle').style.strokeDashoffset = '565';
+            
+            // Clear graph
+            initCanvas();
+        }
+
+        function simulateMultiDevice() {
+            // Simulate connected devices
+            setInterval(() => {
+                connectedDevices = Math.min(3, connectedDevices + Math.random() > 0.5 ? 1 : 0);
+                document.getElementById('deviceCount').textContent = connectedDevices;
+            }, 3000);
+        }
+
+        function startMultiRecording() {
+            alert('Multi-device recording started! All connected devices are now recording.');
+            document.querySelector('#multiMode .start-btn').disabled = true;
+            document.querySelector('#multiMode .stop-btn').disabled = false;
+        }
+
+        function stopMultiRecording() {
+            alert('Recording stopped on all devices. Analyzing combined data...');
+            document.querySelector('#multiMode .start-btn').disabled = false;
+            document.querySelector('#multiMode .stop-btn').disabled = true;
+        }
+
+        function generateRoom() {
+            roomCode = generateRoomCode();
+            document.getElementById('roomCode').textContent = roomCode;
+        }
+
+        function saveSession(session) {
+            sessionHistory.unshift(session);
+            if (sessionHistory.length > 10) {
+                sessionHistory.pop();
+            }
+            localStorage.setItem('rollHistory', JSON.stringify(sessionHistory));
+        }
+
+        function loadSessionHistory() {
+            const saved = localStorage.getItem('rollHistory');
+            if (saved) {
+                sessionHistory = JSON.parse(saved);
+            }
+        }
+
+        function displaySessionHistory() {
+            const container = document.getElementById('sessionHistory');
+            
+            if (sessionHistory.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999;">No sessions recorded yet</p>';
+                return;
+            }
+            
+            let html = '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr style="background: #f5f5f5;">';
+            html += '<th style="padding: 10px; text-align: left;">Date/Time</th>';
+            html += '<th style="padding: 10px;">Score</th>';
+            html += '<th style="padding: 10px;">Peak G</th>';
+            html += '<th style="padding: 10px;">Smoothness</th>';
+            html += '<th style="padding: 10px;">Time</th>';
+            html += '</tr></thead><tbody>';
+            
+            sessionHistory.forEach(session => {
+                const date = new Date(session.timestamp);
+                const scoreColor = session.score >= 80 ? '#4caf50' : session.score >= 60 ? '#ffc107' : '#f44336';
+                
+                html += '<tr style="border-bottom: 1px solid #e0e0e0;">';
+                html += `<td style="padding: 10px;">${date.toLocaleString()}</td>`;
+                html += `<td style="padding: 10px; text-align: center; font-weight: bold; color: ${scoreColor};">${session.score}</td>`;
+                html += `<td style="padding: 10px; text-align: center;">${session.metrics.peakForce}G</td>`;
+                html += `<td style="padding: 10px; text-align: center;">${session.metrics.smoothness}%</td>`;
+                html += `<td style="padding: 10px; text-align: center;">${session.metrics.rollTime}s</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            
+            // Add average score
+            const avgScore = Math.round(sessionHistory.reduce((sum, s) => sum + s.score, 0) / sessionHistory.length);
+            html += `<div style="text-align: center; margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 10px;">`;
+            html += `<div style="font-size: 1.2em; color: #666;">Average Score</div>`;
+            html += `<div style="font-size: 2.5em; font-weight: bold; color: #667eea;">${avgScore}</div>`;
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
