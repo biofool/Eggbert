@@ -10,19 +10,19 @@ function addLog(category, message) {
         message: message,
         id: Date.now() + Math.random()
     };
-    
+
     AppState.systemLogs.unshift(logEntry);
-    
+
     // Keep only last 100 entries
     if (AppState.systemLogs.length > 100) {
         AppState.systemLogs = AppState.systemLogs.slice(0, 100);
     }
-    
+
     // Update logs display if visible
     if (AppState.currentMode === 'logs') {
         updateLogsDisplay();
     }
-    
+
     // Save to localStorage periodically
     if (AppState.systemLogs.length % 10 === 0) {
         saveLogsToStorage();
@@ -35,21 +35,21 @@ function addLog(category, message) {
 function updateLogsDisplay() {
     const container = document.getElementById('logContainer');
     if (!container) return;
-    
+
     let html = '';
-    
+
     AppState.systemLogs.forEach(log => {
         html += `
             <div class="log-entry" data-category="${log.category}">
                 <div class="log-timestamp">
-                    <i class="fas fa-clock"></i> ${log.timestamp} 
+                    <i class="fas fa-clock"></i> ${log.timestamp}
                     <span class="log-category">[${log.category}]</span>
                 </div>
                 <div class="log-message">${escapeHtml(log.message)}</div>
             </div>
         `;
     });
-    
+
     if (html === '') {
         html = `
             <div class="log-entry">
@@ -58,7 +58,7 @@ function updateLogsDisplay() {
             </div>
         `;
     }
-    
+
     container.innerHTML = html;
 }
 
@@ -81,25 +81,16 @@ function exportLogs() {
         showNotification('No logs to export', 'warning');
         return;
     }
-    
+
     const exportData = {
         exportDate: new Date().toISOString(),
         totalEntries: AppState.systemLogs.length,
         logs: AppState.systemLogs
     };
-    
+
     const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `roll-analyzer-logs-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
+    downloadData(dataStr, `roll-analyzer-logs-${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
+
     addLog('Export', `Exported ${AppState.systemLogs.length} log entries`);
     showNotification('Logs exported successfully', 'success');
 }
@@ -126,7 +117,7 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.replace(/[&<>"']/g, (m) => map[m]);
+    return String(text).replace(/[&<>"']/g, (m) => map[m]);
 }
 
 /**
@@ -144,7 +135,7 @@ function formatDuration(milliseconds) {
     const seconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
         return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     } else if (minutes > 0) {
@@ -190,15 +181,15 @@ function calculateStats(array) {
     if (!array || array.length === 0) {
         return { min: 0, max: 0, avg: 0, std: 0 };
     }
-    
+
     const min = Math.min(...array);
     const max = Math.max(...array);
     const avg = array.reduce((sum, val) => sum + val, 0) / array.length;
-    
+
     // Standard deviation
     const variance = array.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / array.length;
     const std = Math.sqrt(variance);
-    
+
     return { min, max, avg, std };
 }
 
@@ -272,7 +263,7 @@ function normalize3D(vector) {
  */
 function movingAverage(data, windowSize = 5) {
     if (!data || data.length === 0) return [];
-    
+
     const result = [];
     for (let i = 0; i < data.length; i++) {
         const start = Math.max(0, i - Math.floor(windowSize / 2));
@@ -289,7 +280,7 @@ function movingAverage(data, windowSize = 5) {
  */
 function lowPassFilter(data, alpha = 0.1) {
     if (!data || data.length === 0) return [];
-    
+
     const filtered = [data[0]];
     for (let i = 1; i < data.length; i++) {
         filtered[i] = alpha * data[i] + (1 - alpha) * filtered[i - 1];
@@ -302,13 +293,13 @@ function lowPassFilter(data, alpha = 0.1) {
  */
 function detectPeaks(data, threshold = 0.1, minDistance = 10) {
     const peaks = [];
-    
+
     for (let i = minDistance; i < data.length - minDistance; i++) {
         let isPeak = true;
-        
+
         // Check if current point is higher than threshold
         if (data[i] < threshold) continue;
-        
+
         // Check if it's a local maximum
         for (let j = i - minDistance; j <= i + minDistance; j++) {
             if (j !== i && data[j] >= data[i]) {
@@ -316,16 +307,15 @@ function detectPeaks(data, threshold = 0.1, minDistance = 10) {
                 break;
             }
         }
-        
+
         if (isPeak) {
             peaks.push({
                 index: i,
-                value: data[i],
-                timestamp: i // Could be replaced with actual timestamp
+                value: data[i]
             });
         }
     }
-    
+
     return peaks;
 }
 
@@ -335,6 +325,14 @@ function detectPeaks(data, threshold = 0.1, minDistance = 10) {
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
+
+/**
+ * Generate a 4-character room code.
+ */
+function generateRoomCode() {
+    return Math.random().toString(36).substring(2, 6).toUpperCase();
+}
+
 
 /**
  * Deep clone object
@@ -380,11 +378,11 @@ function getPixelRatio() {
  */
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
@@ -394,7 +392,7 @@ function formatFileSize(bytes) {
 function downloadData(data, filename, mimeType = 'text/plain') {
     const blob = new Blob([data], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
@@ -410,6 +408,7 @@ function downloadData(data, filename, mimeType = 'text/plain') {
 async function copyToClipboard(text) {
     try {
         await navigator.clipboard.writeText(text);
+        showNotification('Copied to clipboard!', 'success');
         return true;
     } catch (error) {
         // Fallback for older browsers
@@ -417,8 +416,17 @@ async function copyToClipboard(text) {
         textArea.value = text;
         document.body.appendChild(textArea);
         textArea.select();
-        const success = document.execCommand('copy');
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                showNotification('Copied to clipboard!', 'success');
+            } else {
+                showNotification('Failed to copy', 'error');
+            }
+        } catch (err) {
+            showNotification('Failed to copy', 'error');
+        }
         document.body.removeChild(textArea);
-        return success;
+        return false;
     }
 }
