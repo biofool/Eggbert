@@ -1,0 +1,128 @@
+/* Component Styles - styles/components.css */
+
+/* Controls and Buttons */
+.controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    padding: 10px 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.start-btn {
+    background: var(--success-color);
+    color: var(--white);
+}
+
+.stop-btn {
+    background: var(--error-color);
+    color: var(--white);
+}
+
+.reset-btn {
+    background: var(--gray-dark);
+    color: var(--white);
+}
+
+.export-btn {
+    background: var(--info-color);
+    color: var(--white);
+}
+
+.control-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow);
+}
+
+.control-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.control-btn i {
+    font-size: 0.9em;
+}
+
+/* Graph containers */
+.graph-container {
+    position: relative;
+    height: 200px;
+    margin: 20px 0;
+    background: var(--gray-light);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    border: 1px solid var(--gray-medium);
+    overflow: hidden;
+}
+
+.realtime-graph {
+    height: 120px;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-medium);
+    position: relative;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Metrics display */
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--white);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-large);
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg
