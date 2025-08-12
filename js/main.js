@@ -1,22 +1,188 @@
 // Main Application Logic - js/main.js
 
-// // Global application state
-// const AppState = {
-//     accelerationData: [],
-//     isRecording: false,
-//     startTime: null,
-//     animationId: null,
-//     currentMode: 'single',
-//     roomCode: generateRoomCode(),
-//     connectedDevices: 1,
-//     sessionHistory: [],
-//     systemLogs: [],
-//     sensorData: [],
-//     isSensorMonitoring: false,
-//     sensorGraphs: {},
-//     previousAcceleration: { x: 0, y: 0, z: 0, timestamp: 0 }
-// };
-// In main.js, update the AppState object:
+// Compatibility Functions
+// Add these to main.js or create a new compatibility.js file
+// These bridge the gap between old function calls and new implementations
+
+/**
+ * Initialize canvas (compatibility wrapper for Chart.js)
+ */
+function initCanvas() {
+    // This is now handled by Chart.js
+    if (!AppState.charts.acceleration) {
+        initAccelerationChart();
+    }
+}
+
+/**
+ * Draw graph (compatibility wrapper)
+ */
+function drawGraph() {
+    // Update the Chart.js graph
+    updateAccelerationChart();
+}
+
+/**
+ * Animation loop for recording
+ */
+function animate() {
+    if (AppState.isRecording) {
+        // Update the chart with current data
+        updateAccelerationChart();
+
+        // Continue animation
+        AppState.animationId = requestAnimationFrame(animate);
+    }
+}
+
+/**
+ * Load system logs (stub for missing function)
+ */
+function loadSystemLogs() {
+    try {
+        const savedLogs = localStorage.getItem('rollAnalyzerLogs');
+        if (savedLogs) {
+            AppState.systemLogs = JSON.parse(savedLogs);
+            addLog('System', `Loaded ${AppState.systemLogs.length} historical log entries`);
+        }
+    } catch (e) {
+        console.error('Failed to load system logs:', e);
+    }
+}
+
+/**
+ * Update the acceleration chart to ensure it exists and has proper data format
+ */
+function updateAccelerationChart() {
+    const chart = AppState.charts.acceleration;
+    if (!chart || AppState.accelerationData.length === 0) return;
+
+    // Prepare data for Chart.js
+    const chartData = AppState.accelerationData.map(d => ({
+        x: d.time / 1000, // Convert to seconds
+        y: d.magnitude
+    }));
+
+    // Update chart data
+    chart.data.datasets[0].data = chartData;
+
+    // Update chart options if needed
+    if (chartData.length > 0) {
+        const maxTime = Math.max(...chartData.map(d => d.x));
+        const maxMagnitude = Math.max(...chartData.map(d => d.y));
+
+        chart.options.scales.x.max = Math.ceil(maxTime);
+        chart.options.scales.y.max = Math.max(2.5, Math.ceil(maxMagnitude * 1.2));
+    }
+
+    // Update chart without animation for performance
+    chart.update('none');
+}
+
+/**
+ * Reset the acceleration chart
+ */
+function resetAccelerationChart() {
+    const chart = AppState.charts.acceleration;
+    if (chart) {
+        chart.data.datasets[0].data = [];
+        chart.options.scales.x.max = 10;
+        chart.options.scales.y.max = 2.5;
+        chart.update();
+        addLog('UI', 'Acceleration chart reset');
+    }
+}
+
+/**
+ * Enhanced error handling wrapper for all button clicks
+ */
+function safeExecute(func, ...args) {
+    try {
+        return func(...args);
+    } catch (error) {
+        console.error(`Error executing ${func.name}:`, error);
+        showNotification(`Error: ${error.message}`, 'error');
+        addLog('Error', `${func.name}: ${error.message}`);
+    }
+}
+
+/**
+ * Initialize all navigation buttons with error handling
+ */
+function initializeNavigation() {
+    // Remove inline onclick handlers and use event delegation
+    const modeButtons = document.querySelectorAll('.mode-btn');
+
+    modeButtons.forEach(btn => {
+        // Extract mode from onclick attribute
+        const onclickAttr = btn.getAttribute('onclick');
+        if (onclickAttr) {
+            const modeMatch = onclickAttr.match(/setMode\(['"](\w+)['"]\)/);
+            if (modeMatch) {
+                const mode = modeMatch[1];
+
+                // Remove inline onclick
+                btn.removeAttribute('onclick');
+
+                // Add event listener with error handling
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    safeExecute(setMode, mode);
+                });
+            }
+        }
+    });
+
+    // Initialize control buttons with error handling
+    const buttonMappings = [
+        { selector: '.start-btn[onclick="startRecording()"]', handler: startRecording },
+        { selector: '.stop-btn[onclick="stopRecording()"]', handler: stopRecording },
+        { selector: '.reset-btn[onclick="resetData()"]', handler: resetData },
+        { selector: '.start-btn[onclick="startMultiRecording()"]', handler: startMultiRecording },
+        { selector: '.stop-btn[onclick="stopMultiRecording()"]', handler: stopMultiRecording },
+        { selector: '.reset-btn[onclick="generateRoom()"]', handler: generateRoom },
+        { selector: '.start-btn[onclick="startSensorMonitoring()"]', handler: startSensorMonitoring },
+        { selector: '.stop-btn[onclick="stopSensorMonitoring()"]', handler: stopSensorMonitoring },
+        { selector: '.reset-btn[onclick="resetSensorData()"]', handler: resetSensorData },
+        { selector: '.reset-btn[onclick="clearLogs()"]', handler: clearLogs },
+        { selector: '.export-btn[onclick="exportLogs()"]', handler: exportLogs }
+    ];
+
+    buttonMappings.forEach(({ selector, handler }) => {
+        const button = document.querySelector(selector);
+        if (button && handler) {
+            button.removeAttribute('onclick');
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                safeExecute(handler);
+            });
+        }
+    });
+
+    // Initialize export buttons
+    const exportButtons = document.querySelectorAll('.export-btn[onclick*="exportSensorData"]');
+    exportButtons.forEach(btn => {
+        const onclickAttr = btn.getAttribute('onclick');
+        if (onclickAttr) {
+            const formatMatch = onclickAttr.match(/exportSensorData\(['"](\w+)['"]\)/);
+            if (formatMatch) {
+                const format = formatMatch[1];
+                btn.removeAttribute('onclick');
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    safeExecute(exportSensorData, format);
+                });
+            }
+        }
+    });
+}
+
+// Call this function after DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize navigation with proper error handling
+    setTimeout(initializeNavigation, 100);
+});
+
 const AppState = {
     accelerationData: [],
     isRecording: false,
@@ -261,20 +427,6 @@ async function requestMotionPermission() {
 }
 // Add these functions to main.js
 
-function initCanvas() {
-    initAccelerationChart();
-}
-
-function drawGraph() {
-    updateAccelerationChart();
-}
-
-function animate() {
-    if (AppState.isRecording) {
-        updateAccelerationChart();
-        AppState.animationId = requestAnimationFrame(animate);
-    }
-}
 
 function setMode(mode) {
     AppState.currentMode = mode;
