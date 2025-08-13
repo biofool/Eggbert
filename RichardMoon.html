@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Richard Moon Biography Mind Map - Enhanced Interactive</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 250px;
+        }
+
+        .controls h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        .control-group button {
+            margin-right: 5px;
+            margin-bottom: 5px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .control-group button:hover {
+            background: #2980b9;
+        }
+
+        .control-group button.active {
+            background: #e74c3c;
+        }
+
+        .zoom-container {
+            margin: 10px 0;
+        }
+
+        .zoom-slider {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .zoom-label {
+            font-size: 12px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .pan-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2px;
+            margin: 10px 0;
+        }
+
+        .pan-btn {
+            padding: 8px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .pan-btn:hover {
+            background: #219a52;
+        }
+
+        .pan-btn.center {
+            background: #e67e22;
+        }
+
+        .pan-btn.center:hover {
+            background: #d68910;
+        }
+
+        .mindmap-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        .mindmap-container.panning {
+            cursor: grabbing;
+        }
+
+        .mindmap {
+            position: relative;
+            width: 3000px;
+            height: 2000px;
+            transform-origin: 0 0;
+            transition: transform 0.3s ease;
+        }
+
+        .central-node {
+            position: absolute;
+            top: 950px;
+            left: 1400px;
+            width: 200px;
+            height: 100px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .branch {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px 20px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            z-index: 10;
+            min-width: 250px;
+            max-width: 350px;
+        }
+
+        .branch:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+            z-index: 50;
+        }
+
+        .branch.expanded {
+            max-width: 500px;
+            min-height: 400px;
+            z-index: 150;
+            transform: scale(1.05);
+        }
+
+        .branch.dragging {
+            cursor: grabbing;
+            transform: scale(1.05);
+            z-index: 200;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .branch-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expand-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .expand-btn:hover {
+            background: #2980b9;
+        }
+
+        .branch-content {
+            font-size: 12px;
+            color: #34495e;
+            line-height: 1.5;
+        }
+
+        .branch-details {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+            font-size: 11px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .branch-details.visible {
+            display: block;
+        }
+
+        .detail-section {
+            margin-bottom: 15px;
+        }
+
+        .detail-section h4 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .detail-list {
+            margin-left: 10px;
+        }
+
+        .detail-list li {
+            margin-bottom: 3px;
+        }
+
+        .quote {
+            font-style: italic;
+            background: #f8f9fa;
+            padding: 8px;
+            border-left: 3px solid #3498db;
+            margin: 5px 0;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            color: #2c3e50;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 2px 0;
+            display: inline-block;
+        }
+
+        .line {
+            position: absolute;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4));
+            height: 3px;
+            transform-origin: left center;
+            z-index: 1;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* Branch positioning */
+        .martial-arts {
+            top: 300px;
+            left: 200px;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+        }
+
+        .music {
+            top: 200px;
+            right: 400px;
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+        }
+
+        .corporate {
+            bottom: 500px;
+            left: 100px;
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+
+        .peace {
+            bottom: 400px;
+            right: 300px;
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+            color: white;
+        }
+
+        .other-studies {
+            top: 500px;
+            left: 50px;
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: white;
+        }
+
+        .timeline {
+            top: 600px;
+            right: 100px;
+            background: linear-gradient(135deg, #55a3ff, #003d82);
+            color: white;
+        }
+
+        .youtube {
+            bottom: 600px;
+            right: 500px;
+            background: linear-gradient(135deg, #ff3838, #c44569);
+            color: white;
+        }
+
+        .integration {
+            bottom: 300px;
+            left: 600px;
+            background: linear-gradient(135deg, #e17055, #d63031);
+            color: white;
+        }
+
+        .info-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #2c3e50;
+            max-width: 300px;
+        }
+
+        .coaching-examples {
+            background: linear-gradient(135deg, #81ecec, #00cec9);
+            color: white;
+            top: 400px;
+            left: 800px;
+        }
+
+        .listening-work {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: white;
+            top: 700px;
+            left: 1800px;
+        }
+
+        .business-applications {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+            bottom: 700px;
+            left: 400px;
+        }
+    </style>
+</head>
+<body>
+<div class="controls">
+    <h3>Mind Map Controls</h3>
+
+    <div class="control-group">
+        <button onclick="autoLayout()">Auto Layout</button>
+        <button onclick="resetLayout()">Reset Position</button>
+        <button onclick="toggleDrag()" id="dragBtn">Enable Drag</button>
+    </div>
+
+    <div class="control-group">
+        <button onclick="distributeEvenly()">Distribute Evenly</button>
+        <button onclick="circularLayout()">Circular Layout</button>
+        <button onclick="checkOverlaps()">Check Overlaps</button>
+    </div>
+
+    <div class="zoom-container">
+        <div class="zoom-label">Zoom Level: <span id="zoomValue">100%</span></div>
+        <input type="range" class="zoom-slider" id="zoomSlider" min="25" max="300" value="100" step="5">
+    </div>
+
+    <div class="control-group">
+        <strong>Pan Controls:</strong>
+        <div class="pan-controls">
+            <button class="pan-btn" onclick="panDirection('nw')">↖</button>
+            <button class="pan-btn" onclick="panDirection('n')">↑</button>
+            <button class="pan-btn" onclick="panDirection('ne')">↗</button>
+            <button class="pan-btn" onclick="panDirection('w')">←</button>
+            <button class="pan-btn center" onclick="centerView()">⌂</button>
+            <button class="pan-btn" onclick="panDirection('e')">→</button>
+            <button class="pan-btn" onclick="panDirection('sw')">↙</button>
+            <button class="pan-btn" onclick="panDirection('s')">↓</button>
+            <button class="pan-btn" onclick="panDirection('se')">↘</button>
+        </div>
+    </div>
+</div>
+
+<div class="info-panel">
+    <strong>Instructions:</strong><br>
+    • Click cards to expand/collapse details<br>
+    • Use zoom slider or mouse wheel<br>
+    • Drag background to pan around<br>
+    • Use pan controls for precise movement<br>
+    • Enable drag to move individual cards
+</div>
+
+<div class="mindmap-container" id="mindmapContainer">
+    <div class="mindmap" id="mindmap">
+        <!-- Connection Lines -->
+        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+            <g id="connectionLines"></g>
+        </svg>
+
+        <!-- Central Node -->
+        <div class="central-node" id="central">
+            RICHARD MOON<br>
+            <small>Multidisciplinary Teacher & Consultant</small>
+        </div>
+
+        <!-- Enhanced Branches with Detailed Content -->
+        <div class="branch martial-arts" data-id="martial-arts">
+            <div class="branch-title">
+                Martial Arts Foundation
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <div class="highlight">Aikido since 1971</div>
+                Student of Robert Nadeau sensei<br>
+                Direct lineage to O sensei (founder)<br><br>
+                <div class="highlight">Cheng Hsin</div>
+                Training with Peter Ralston (World Champion)<br><br>
+                <div class="highlight">Capoeira</div>
+                Mestre Acordeon Bira Almeida<br>
+                3x World Heavyweight Champion<br><br>
+                <div class="highlight">Tai Chi & Boxing</div>
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Aikido Philosophy & Application</h4>
+                    <div class="quote">"Aikido is a study of the unity of the universal system. When we are in harmony with the universe, we can draw on its power."</div>
+                    <ul class="detail-list">
+                        <li>Three Easy Lessons: Center, Blend, Lead</li>
+                        <li>Physical metaphor for business dynamics</li>
+                        <li>Moving 'off the line' vs. absorbing attacks</li>
+                        <li>Harmonious relationship with opposing forces</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Business Applications</h4>
+                    <ul class="detail-list">
+                        <li>GTE Competition: Used competitor's advertising momentum while focusing on distribution channels</li>
+                        <li>Executive presence and centering under pressure</li>
+                        <li>Conflict as source of power rather than problem</li>
+                        <li>Leading from harmony vs. opposition</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch music" data-id="music">
+            <div class="branch-title">
+                Musical Journey
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <div class="highlight">Classical Guitar</div>
+                George C. Economides (teacher)<br><br>
+                <div class="highlight">Indian Ragas & Voice</div>
+                G.S. Sachdev (Ali Akbar College of Music)<br><br>
+                <div class="highlight">Jazz Studies</div>
+                California Jazz Conservatory<br><br>
+                <div class="highlight">Blues & Rock Performance</div>
+                Multiple bands over decades<br><br>
+                <strong>Lifetime student across styles</strong>
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Musical Philosophy</h4>
+                    <div class="quote">"As a musician I play all kinds of music. I seek connection with the source, the muse, so I play everything from classical to folk music, from improvised jazz to rock-and-roll."</div>
+                    <ul class="detail-list">
+                        <li>Improvisation and creativity focus</li>
+                        <li>Connection to creative source</li>
+                        <li>Cross-genre exploration</li>
+                        <li>Jazz improvisation as life metaphor</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Integration with Other Disciplines</h4>
+                    <ul class="detail-list">
+                        <li>Music as spiritual practice like Aikido</li>
+                        <li>Improvisation skills applied to business consulting</li>
+                        <li>Listening skills development</li>
+                        <li>Creative flow states</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch corporate" data-id="corporate">
+            <div class="branch-title">
+                Corporate Consulting
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                Partner: <div class="highlight">Chris Thorsen</div><br>
+                Aikido-based consulting firm<br><br>
+                <strong>Services:</strong><br>
+                • Executive & team coaching<br>
+                • Dynamic presence development<br>
+                • Inspired leadership training<br>
+                • Collective intelligence<br>
+                • Conflict as power source<br>
+                • Communication facilitation<br>
+                • Extraordinary listening
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Evolution of Business Work</h4>
+                    <div class="quote">"We went through a cycle where we really made an effort to learn how to speak their language. It was about learning how to put the work into a form that they understood."</div>
+                    <ul class="detail-list">
+                        <li>Phase 1: Normal business consultants with Aikido additions</li>
+                        <li>Phase 2: Full blending - learning business language</li>
+                        <li>Phase 3: Putting Aikido forward in business context</li>
+                        <li>Current: Serving consciousness and spirit in business</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Client Results</h4>
+                    <ul class="detail-list">
+                        <li>Clients led country in performance metrics</li>
+                        <li>Executive promotions and career advancement</li>
+                        <li>Companies worth billions created</li>
+                        <li>Transformation of individual capabilities</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Key Methodologies</h4>
+                    <ul class="detail-list">
+                        <li>Somatic reactivity awareness</li>
+                        <li>Def-con level communication</li>
+                        <li>Center-Blend-Lead framework</li>
+                        <li>Listening to whisperings vs. screaming</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch coaching-examples" data-id="coaching-examples">
+            <div class="branch-title">
+                Coaching Examples & Stories
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <div class="highlight">Michael Bush - $50M Deal</div>
+                Listening work application<br><br>
+                <div class="highlight">John Combs - The Wall</div>
+                Team building breakthrough<br><br>
+                <div class="highlight">Jim Dixon - Dark Night of Soul</div>
+                Crisis leadership moment<br><br>
+                <div class="highlight">Executive Transformation</div>
+                Real-world applications
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Michael Bush's $50M Contract Story</h4>
+                    <div class="quote">"I was in this other place... It was like being in another state, almost a trance. I was so in it. I wasn't aware of self in the usual sense."</div>
+                    <ul class="detail-list">
+                        <li>Listening to inner guidance vs. MBA training</li>
+                        <li>Customer in full reactivity - let mercury boil</li>
+                        <li>Personal commitment beyond business role</li>
+                        <li>Result: $50M contract and $2M check</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>John Combs - The Wall Exercise</h4>
+                    <div class="quote">"I turned around in disgust and there was so much emotion and energy coming out of this group that I magically turned around and jumped up and caught his ankle."</div>
+                    <ul class="detail-list">
+                        <li>12-foot wall ropes course challenge</li>
+                        <li>Team energy creating impossible breakthrough</li>
+                        <li>Learning to accept support vs. solo performance</li>
+                        <li>Collective intelligence in action</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Dark Night of the Soul - Nextel Crisis</h4>
+                    <div class="quote">"When everything is wrapping around you, you come into this dark place from which you don't see any way out... if you can open your mind to the spirit of possibility, the whisperings can be heard."</div>
+                    <ul class="detail-list">
+                        <li>Nextel launch crisis - technology failing</li>
+                        <li>Wall Street pressure vs. customer reality</li>
+                        <li>Solution: Stop acquiring customers, focus on satisfaction</li>
+                        <li>Stock dropped $50 to $9 but company saved</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch listening-work" data-id="listening-work">
+            <div class="branch-title">
+                The Listening Work
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <div class="highlight">Extraordinary Listening Technology</div>
+                Core methodology development<br><br>
+                <div class="highlight">Somatic Reactivity</div>
+                Working with body's wisdom<br><br>
+                <div class="highlight">Def-con Levels</div>
+                1-5 emotional state awareness<br><br>
+                <div class="highlight">Whisperings vs. Screaming</div>
+                Distinguishing wisdom from noise
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Core Principles</h4>
+                    <div class="quote">"Extraordinary Listening is teaching you to do the opposite of what most of us do when the Mercury goes up. Don't suppress the increasing energy. Be aware of it. Listen to it. Understand it."</div>
+                    <ul class="detail-list">
+                        <li>Reactivity as intelligence, not interference</li>
+                        <li>Listen TO reactivity vs. THROUGH reactivity</li>
+                        <li>Value rather than repress emotional energy</li>
+                        <li>Transform fear into call to action</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Practical Applications</h4>
+                    <ul class="detail-list">
+                        <li>Def-con level communication ("I'm at def-con 2")</li>
+                        <li>Centering before attempting to lead</li>
+                        <li>Listening for whisperings of wisdom</li>
+                        <li>Creating value through being heard</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Interference Types</h4>
+                    <ul class="detail-list">
+                        <li>Thinking interference (composing responses)</li>
+                        <li>Prejudice and word triggers</li>
+                        <li>Cultural misunderstandings</li>
+                        <li>Assumptions about competence</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch peace" data-id="peace">
+            <div class="branch-title">
+                International Peace Building
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <strong>Locations:</strong><br>
+                • <div class="highlight">Cyprus</div><br>
+                • <div class="highlight">Bosnia-Herzegovina</div><br>
+                • <div class="highlight">Pacific Rim</div><br><br>
+                <strong>Methods:</strong><br>
+                • Aikido principles in mediation<br>
+                • International dialogue facilitation<br><br>
+                <strong>Influences:</strong><br>
+                • David Bohm (dialogue)<br>
+                • Marshall Rosenberg (nonviolent communication)
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Bosnia-Herzegovina Work</h4>
+                    <div class="quote">"Her experience of leadership had been one of strong leaders who had abused their power. So the word 'leader' had a negative connotation for her."</div>
+                    <ul class="detail-list">
+                        <li>Working with young political leaders</li>
+                        <li>Cultural differences in word meanings</li>
+                        <li>Leadership vs. power abuse concepts</li>
+                        <li>Multi-track diplomacy applications</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Dialogue Integration</h4>
+                    <ul class="detail-list">
+                        <li>David Bohm dialogue methodology</li>
+                        <li>Aikido + dialogue "sophisticated marriage"</li>
+                        <li>Nonviolent communication principles</li>
+                        <li>Cross-cultural understanding</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Organizations</h4>
+                    <ul class="detail-list">
+                        <li>Institute for Multi-track Diplomacy</li>
+                        <li>Harvard Negotiation Project</li>
+                        <li>Conflict Management Group</li>
+                        <li>Fulbright Commission</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch other-studies" data-id="other-studies">
+            <div class="branch-title">
+                Other Studies & Influences
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <div class="highlight">Yoga since 1963</div>
+                60+ years of practice<br><br>
+                <div class="highlight">Dance</div>
+                John Graham (teacher)<br><br>
+                <div class="highlight">Improvisational Theater</div>
+                The Committee<br><br>
+                <div class="highlight">Dialogue Studies</div>
+                David Bohm methodology<br><br>
+                <div class="highlight">Consciousness Work</div>
+                Awareness studies
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Yoga Foundation</h4>
+                    <ul class="detail-list">
+                        <li>Started practice in 1963 (60+ years)</li>
+                        <li>Spiritual discipline foundation</li>
+                        <li>Body-mind integration</li>
+                        <li>Meditation and awareness practices</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>David Bohm Dialogue</h4>
+                    <div class="quote">"The work combining Aikido and dialogue in a sophisticated marriage was enriched by his study of dialogue with David Bohm."</div>
+                    <ul class="detail-list">
+                        <li>Quantum physicist and philosopher</li>
+                        <li>Dialogue as collective inquiry</li>
+                        <li>Suspension of assumptions</li>
+                        <li>Group consciousness exploration</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Creative Arts Integration</h4>
+                    <ul class="detail-list">
+                        <li>Dance with John Graham</li>
+                        <li>Improvisational theater with The Committee</li>
+                        <li>Spontaneity and presence training</li>
+                        <li>Creative expression as spiritual practice</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch timeline" data-id="timeline">
+            <div class="branch-title">
+                Key Timeline & Milestones
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <div class="highlight">1963</div> Yoga practice begins<br>
+                <div class="highlight">1971</div> Aikido training starts<br>
+                <div class="highlight">1982</div> Meets Jim Dixon & Chris Thorsen<br>
+                <div class="highlight">1990s</div> Corporate consulting develops<br>
+                <div class="highlight">1999</div> "Business of Listening" published<br>
+                <div class="highlight">Present</div> YouTube teaching & consulting
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Career Evolution Phases</h4>
+                    <ul class="detail-list">
+                        <li>1963-1971: Foundational spiritual practices</li>
+                        <li>1971-1982: Aikido mastery and teaching</li>
+                        <li>1982-1990: Early business applications</li>
+                        <li>1990-1999: Corporate consulting peak</li>
+                        <li>1999-2005: Listening work development</li>
+                        <li>2005-Present: Consciousness-based consulting</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Key Relationships Timeline</h4>
+                    <ul class="detail-list">
+                        <li>Robert Nadeau sensei - Aikido foundation</li>
+                        <li>Chris Thorsen - Partnership begins 1982</li>
+                        <li>Jim Dixon - First major corporate client</li>
+                        <li>John Combs - Nextel development work</li>
+                        <li>Michael Bush - Ongoing executive coaching</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch youtube" data-id="youtube">
+            <div class="branch-title">
+                Current Work & Teaching
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <strong>YouTube Channel:</strong><br>
+                <div class="highlight">@moonsensei</div><br><br>
+                <strong>Focus Areas:</strong><br>
+                • Consciousness studies content<br>
+                • Awareness studies<br>
+                • Instructional videos<br>
+                • Online teaching platform<br>
+                • Extraordinary Listening seminars
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Current Mission</h4>
+                    <div class="quote">"We are shifting into a time of harmony, a time when it becomes less important to talk and more important to listen."</div>
+                    <ul class="detail-list">
+                        <li>Creating wealth in sustainable society</li>
+                        <li>Whole systems thinking in business</li>
+                        <li>Leadership from spirit/intuition</li>
+                        <li>Global consciousness development</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Teaching Platforms</h4>
+                    <ul class="detail-list">
+                        <li>ExtraordinaryListening.com</li>
+                        <li>Aikido of Marin dojo</li>
+                        <li>The Quantum Edge (with Chris Thorsen)</li>
+                        <li>International workshops and seminars</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Vision for Future</h4>
+                    <div class="quote">"The level I am describing is beyond our imagination... creating wealth that makes everyone richer."</div>
+                    <ul class="detail-list">
+                        <li>Exponential wealth creation through cooperation</li>
+                        <li>Strategic alliances between competitors</li>
+                        <li>Harmony-based business models</li>
+                        <li>Sustainable global economic systems</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch integration" data-id="integration">
+            <div class="branch-title">
+                Integration Philosophy
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <div class="highlight">Sophisticated Marriage:</div><br>
+                • Aikido + Dialogue<br>
+                • Martial arts + Corporate training<br>
+                • Eastern philosophy + Western business<br>
+                • Movement + Communication<br>
+                • Conflict resolution through presence<br>
+                • Spirit + Material success
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Core Philosophy</h4>
+                    <div class="quote">"Wealth is of the spirit. Wealth is to the spirit what health is to the physical body. When the spirit is hungry no amount of material possessions will satisfy that hunger."</div>
+                    <ul class="detail-list">
+                        <li>Material success as expression of spiritual alignment</li>
+                        <li>Harmony with universe creates access to its power</li>
+                        <li>Cooperation vs. competition paradigm</li>
+                        <li>Whole systems thinking</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Practical Integration Methods</h4>
+                    <ul class="detail-list">
+                        <li>Physical Aikido demonstrations for business concepts</li>
+                        <li>Somatic awareness in corporate settings</li>
+                        <li>Dialogue process in team development</li>
+                        <li>Listening work in conflict resolution</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>New Paradigm Vision</h4>
+                    <div class="quote">"We are making the shift from seeing a successful company as one that kicks ass on everybody else... to a whole systems company."</div>
+                    <ul class="detail-list">
+                        <li>Companies as part of larger economic system</li>
+                        <li>Economy as part of world system</li>
+                        <li>Mutual benefit over zero-sum thinking</li>
+                        <li>Sustainable wealth creation models</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch business-applications" data-id="business-applications">
+            <div class="branch-title">
+                Business Applications & Results
+                <button class="expand-btn" onclick="toggleExpand(this)">+</button>
+            </div>
+            <div class="branch-content">
+                <div class="highlight">Cellular One Success</div>
+                Jim Dixon startup leadership<br><br>
+                <div class="highlight">Nextel Transformation</div>
+                John Combs regional excellence<br><br>
+                <div class="highlight">Whalen & Co Growth</div>
+                Michael Bush executive development<br><br>
+                <div class="highlight">Telecommunications Industry</div>
+                Multiple billion-dollar companies
+            </div>
+            <div class="branch-details">
+                <div class="detail-section">
+                    <h4>Cellular One - San Francisco</h4>
+                    <ul class="detail-list">
+                        <li>$30 million startup in record time</li>
+                        <li>Culture that doesn't grind people up</li>
+                        <li>Executive team development</li>
+                        <li>High-pressure, high-performance environment</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Nextel Communications</h4>
+                    <div class="quote">"The companies and individuals would have grown anyway but I do believe that the work we did together was instrumental to the quantity and quality of their growth."</div>
+                    <ul class="detail-list">
+                        <li>John Combs' Southwest region: #1 nationwide</li>
+                        <li>First to 1000 employees, 500k customers</li>
+                        <li>First to $0.5B revenue, $300M cash flow</li>
+                        <li>Stock growth from $9 to $160</li>
+                        <li>Crisis management during technology failures</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Key Success Methodologies</h4>
+                    <ul class="detail-list">
+                        <li>Quarterly team building with dialogue sessions</li>
+                        <li>Ropes courses and physical challenges</li>
+                        <li>Open communication development</li>
+                        <li>Leadership vs. management transformation</li>
+                        <li>Collective intelligence cultivation</li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h4>Measurable Results</h4>
+                    <ul class="detail-list">
+                        <li>Teams led country in every company worked with</li>
+                        <li>Executive promotions and advancement</li>
+                        <li>Companies created worth billions</li>
+                        <li>Cultural transformation from command-control to collaborative</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global variables
+    let currentScale = 1;
+    let isDragEnabled = false;
+    let draggedElement = null;
+    let offset = { x: 0, y: 0 };
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+    let panOffset = { x: 0, y: 0 };
+
+    // Get references to elements
+    const mindmap = document.getElementById('mindmap');
+    const mindmapContainer = document.getElementById('mindmapContainer');
+    const central = document.getElementById('central');
+    const branches = document.querySelectorAll('.branch');
+    const connectionLines = document.getElementById('connectionLines');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomValue = document.getElementById('zoomValue');
+
+    // Function definitions (moved to top to avoid reference errors)
+    function updateZoomDisplay() {
+        zoomValue.textContent = Math.round(currentScale * 100) + '%';
+    }
+
+    function updateZoom() {
+        mindmap.style.transform = `scale(${currentScale}) translate(${panOffset.x}px, ${panOffset.y}px)`;
+        setTimeout(updateConnections, 50);
+    }
+
+    function panDirection(direction) {
+        const panStep = 100;
+        switch(direction) {
+            case 'n': panOffset.y += panStep; break;
+            case 's': panOffset.y -= panStep; break;
+            case 'e': panOffset.x -= panStep; break;
+            case 'w': panOffset.x += panStep; break;
+            case 'ne': panOffset.y += panStep; panOffset.x -= panStep; break;
+            case 'nw': panOffset.y += panStep; panOffset.x += panStep; break;
+            case 'se': panOffset.y -= panStep; panOffset.x -= panStep; break;
+            case 'sw': panOffset.y -= panStep; panOffset.x += panStep; break;
+        }
+        updateZoom();
+    }
+
+    function centerView() {
+        panOffset = { x: 0, y: 0 };
+        currentScale = 1;
+        zoomSlider.value = 100;
+        updateZoom();
+        updateZoomDisplay();
+    }
+
+    function toggleDrag() {
+        isDragEnabled = !isDragEnabled;
+        const btn = document.getElementById('dragBtn');
+        btn.textContent = isDragEnabled ? 'Disable Drag' : 'Enable Drag';
+        btn.classList.toggle('active', isDragEnabled);
+
+        branches.forEach(branch => {
+            if (isDragEnabled) {
+                branch.addEventListener('mousedown', startDrag);
+            } else {
+                branch.removeEventListener('mousedown', startDrag);
+                branch.classList.remove('dragging');
+            }
+        });
+    }
+
+    function startDrag(e) {
+        if (!isDragEnabled) return;
+
+        draggedElement = e.currentTarget;
+        draggedElement.classList.add('dragging');
+
+        const rect = draggedElement.getBoundingClientRect();
+        const mindmapRect = mindmap.getBoundingClientRect();
+
+        offset.x = e.clientX - rect.left;
+        offset.y = e.clientY - rect.top;
+
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', stopDrag);
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function drag(e) {
+        if (!draggedElement) return;
+
+        const mindmapRect = mindmap.getBoundingClientRect();
+        const x = (e.clientX - mindmapRect.left - offset.x) / currentScale;
+        const y = (e.clientY - mindmapRect.top - offset.y) / currentScale;
+
+        draggedElement.style.left = Math.max(0, Math.min(x, 2700)) + 'px';
+        draggedElement.style.top = Math.max(0, Math.min(y, 1800)) + 'px';
+        draggedElement.style.right = 'auto';
+        draggedElement.style.bottom = 'auto';
+
+        updateConnections();
+    }
+
+    function stopDrag() {
+        if (draggedElement) {
+            draggedElement.classList.remove('dragging');
+            draggedElement = null;
+        }
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('mouseup', stopDrag);
+        setTimeout(updateConnections, 50);
+    }
+
+    function toggleExpand(button) {
+        const branch = button.closest('.branch');
+        const details = branch.querySelector('.branch-details');
+        const isExpanded = branch.classList.contains('expanded');
+
+        if (isExpanded) {
+            branch.classList.remove('expanded');
+            details.classList.remove('visible');
+            button.textContent = '+';
+        } else {
+            branch.classList.add('expanded');
+            details.classList.add('visible');
+            button.textContent = '−';
+        }
+
+        setTimeout(updateConnections, 100);
+    }
+
+    function autoLayout() {
+        const centerX = 1400;
+        const centerY = 950;
+        const radius = 500;
+        const angleStep = (2 * Math.PI) / branches.length;
+
+        branches.forEach((branch, index) => {
+            const angle = index * angleStep;
+            const x = centerX + Math.cos(angle) * radius - 175;
+            const y = centerY + Math.sin(angle) * radius - 100;
+
+            branch.style.left = x + 'px';
+            branch.style.top = y + 'px';
+            branch.style.right = 'auto';
+            branch.style.bottom = 'auto';
+        });
+
+        setTimeout(updateConnections, 100);
+    }
+
+    function circularLayout() {
+        const centerX = 1500;
+        const centerY = 1000;
+        const radius = 600;
+        const angleStep = (2 * Math.PI) / branches.length;
+
+        branches.forEach((branch, index) => {
+            const angle = index * angleStep - Math.PI / 2;
+            const x = centerX + Math.cos(angle) * radius - 175;
+            const y = centerY + Math.sin(angle) * radius - 100;
+
+            branch.style.left = Math.max(50, Math.min(x, 2500)) + 'px';
+            branch.style.top = Math.max(50, Math.min(y, 1700)) + 'px';
+            branch.style.right = 'auto';
+            branch.style.bottom = 'auto';
+        });
+
+        setTimeout(updateConnections, 100);
+    }
+
+    function distributeEvenly() {
+        const padding = 100;
+        const cols = 4;
+        const rows = Math.ceil(branches.length / cols);
+        const cellWidth = (3000 - 2 * padding) / cols;
+        const cellHeight = (2000 - 2 * padding) / rows;
+
+        branches.forEach((branch, index) => {
+            const row = Math.floor(index / cols);
+            const col = index % cols;
+
+            let x = padding + col * cellWidth;
+            let y = padding + row * cellHeight;
+
+            // Avoid center area
+            if (x > 1200 && x < 1600 && y > 800 && y < 1100) {
+                x += 400;
+            }
+
+            branch.style.left = x + 'px';
+            branch.style.top = y + 'px';
+            branch.style.right = 'auto';
+            branch.style.bottom = 'auto';
+        });
+
+        setTimeout(updateConnections, 100);
+    }
+
+    function resetLayout() {
+        branches.forEach(branch => {
+            branch.style.left = '';
+            branch.style.top = '';
+            branch.style.right = '';
+            branch.style.bottom = '';
+            branch.classList.remove('expanded');
+            const details = branch.querySelector('.branch-details');
+            if (details) details.classList.remove('visible');
+            const button = branch.querySelector('.expand-btn');
+            if (button) button.textContent = '+';
+        });
+        setTimeout(updateConnections, 100);
+    }
+
+    function checkOverlaps() {
+        const overlaps = [];
+        const branchArray = Array.from(branches);
+
+        for (let i = 0; i < branchArray.length; i++) {
+            for (let j = i + 1; j < branchArray.length; j++) {
+                if (isOverlapping(branchArray[i], branchArray[j])) {
+                    overlaps.push([branchArray[i], branchArray[j]]);
+                }
+            }
+        }
+
+        // Reset all highlights
+        branches.forEach(branch => {
+            branch.style.outline = '';
+        });
+
+        // Highlight overlapping elements
+        overlaps.forEach(([a, b]) => {
+            a.style.outline = '3px solid red';
+            b.style.outline = '3px solid red';
+        });
+
+        if (overlaps.length > 0) {
+            alert(`Found ${overlaps.length} overlapping pairs. They are highlighted in red.`);
+        } else {
+            alert('No overlaps detected!');
+        }
+    }
+
+    function isOverlapping(elem1, elem2) {
+        const rect1 = elem1.getBoundingClientRect();
+        const rect2 = elem2.getBoundingClientRect();
+
+        return !(rect1.right < rect2.left ||
+            rect1.left > rect2.right ||
+            rect1.bottom < rect2.top ||
+            rect1.top > rect2.bottom);
+    }
+
+    function updateConnections() {
+        const centralStyle = window.getComputedStyle(central);
+        const centralLeft = parseFloat(centralStyle.left) || 1400;
+        const centralTop = parseFloat(centralStyle.top) || 950;
+        const centralWidth = parseFloat(centralStyle.width) || 200;
+        const centralHeight = parseFloat(centralStyle.height) || 100;
+
+        const centralCenter = {
+            x: centralLeft + centralWidth / 2,
+            y: centralTop + centralHeight / 2
+        };
+
+        connectionLines.innerHTML = '';
+
+        branches.forEach(branch => {
+            const branchStyle = window.getComputedStyle(branch);
+            let branchLeft, branchTop;
+
+            if (branchStyle.left !== 'auto' && branchStyle.left !== '') {
+                branchLeft = parseFloat(branchStyle.left);
+            } else if (branchStyle.right !== 'auto' && branchStyle.right !== '') {
+                branchLeft = 3000 - parseFloat(branchStyle.right) - parseFloat(branchStyle.width);
+            } else {
+                branchLeft = 0;
+            }
+
+            if (branchStyle.top !== 'auto' && branchStyle.top !== '') {
+                branchTop = parseFloat(branchStyle.top);
+            } else if (branchStyle.bottom !== 'auto' && branchStyle.bottom !== '') {
+                branchTop = 2000 - parseFloat(branchStyle.bottom) - parseFloat(branchStyle.height);
+            } else {
+                branchTop = 0;
+            }
+
+            const branchWidth = parseFloat(branchStyle.width) || 300;
+            const branchHeight = parseFloat(branchStyle.height) || 200;
+
+            const branchCenter = {
+                x: branchLeft + branchWidth / 2,
+                y: branchTop + branchHeight / 2
+            };
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', centralCenter.x);
+            line.setAttribute('y1', centralCenter.y);
+            line.setAttribute('x2', branchCenter.x);
+            line.setAttribute('y2', branchCenter.y);
+            line.setAttribute('stroke', 'rgba(255, 255, 255, 0.6)');
+            line.setAttribute('stroke-width', '3');
+            line.setAttribute('stroke-linecap', 'round');
+
+            connectionLines.appendChild(line);
+        });
+    }
+
+    // Event listeners and initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Zoom slider event
+        zoomSlider.addEventListener('input', function() {
+            currentScale = this.value / 100;
+            updateZoom();
+            updateZoomDisplay();
+        });
+
+        // Mouse wheel zoom
+        mindmapContainer.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            currentScale = Math.max(0.25, Math.min(3, currentScale * zoomFactor));
+            zoomSlider.value = currentScale * 100;
+            updateZoom();
+            updateZoomDisplay();
+        });
+
+        // Pan functionality with mouse
+        mindmapContainer.addEventListener('mousedown', (e) => {
+            if (e.target === mindmapContainer && !isDragEnabled) {
+                isPanning = true;
+                panStart.x = e.clientX - panOffset.x;
+                panStart.y = e.clientY - panOffset.y;
+                mindmapContainer.classList.add('panning');
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isPanning) {
+                panOffset.x = e.clientX - panStart.x;
+                panOffset.y = e.clientY - panStart.y;
+                updateZoom();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isPanning) {
+                isPanning = false;
+                mindmapContainer.classList.remove('panning');
+            }
+        });
+
+        // Update connections on window resize
+        window.addEventListener('resize', () => {
+            setTimeout(updateConnections, 100);
+        });
+
+        // Initial setup
+        setTimeout(updateConnections, 100);
+        updateZoomDisplay();
+    });
+</script>
+</body>
+</html>
