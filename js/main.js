@@ -1,5 +1,18 @@
 // Main Application Logic - js/main.js
 
+// App Configuration
+const APP_TITLE = "Slow Your Roll: Helper!";
+
+// Set app title in both page title and header
+function setAppTitle() {
+    document.title = APP_TITLE;
+    const pageTitle = document.getElementById('pageTitle');
+    const headerTitle = document.getElementById('headerTitle');
+    
+    if (pageTitle) pageTitle.textContent = APP_TITLE;
+    if (headerTitle) headerTitle.textContent = APP_TITLE;
+}
+
 // Compatibility Functions
 // Add these to main.js or create a new compatibility.js file
 // These bridge the gap between old function calls and new implementations
@@ -181,6 +194,7 @@ function initializeNavigation() {
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize navigation with proper error handling
     setTimeout(initializeNavigation, 100);
+    setAppTitle();
 });
 
 const AppState = {
@@ -212,8 +226,9 @@ const AppState = {
     }
 };
 // Application initialization
+const Tittle = APP_TITLE;
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Roll Smoothness Analyzer - Initializing...');
+    console.log(Tittle+' - Initializing...');
 
     // Initialize core systems
     initializeApplication();
@@ -224,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load saved data
     loadSavedData();
 
-    addLog('System', 'Roll Smoothness Analyzer ready');
+    addLog('System', Tittle+ ' ready');
     console.log('Application initialized successfully');
 });
 
