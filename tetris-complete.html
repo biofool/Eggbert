@@ -448,6 +448,38 @@
                     <span class="diagnostic-label">Status:</span>
                     <span class="diagnostic-value" id="gameStatus">Ready</span>
                 </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">Total Picks:</span>
+                    <span class="diagnostic-value" id="totalPicks">0</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">I:</span>
+                    <span class="diagnostic-value" id="pieceI">0</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">O:</span>
+                    <span class="diagnostic-value" id="pieceO">0</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">T:</span>
+                    <span class="diagnostic-value" id="pieceT">0</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">S:</span>
+                    <span class="diagnostic-value" id="pieceS">0</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">Z:</span>
+                    <span class="diagnostic-value" id="pieceZ">0</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">J:</span>
+                    <span class="diagnostic-value" id="pieceJ">0</span>
+                </div>
+                <div class="diagnostic-item">
+                    <span class="diagnostic-label">L:</span>
+                    <span class="diagnostic-value" id="pieceL">0</span>
+                </div>
             </div>
         </div>
 
@@ -719,6 +751,12 @@
             this.gameTime = 0;
             this.startTime = null;
 
+            // Add piece distribution tracking
+            this.pieceStats = {
+                I: 0, O: 0, T: 0, S: 0, Z: 0, J: 0, L: 0
+            };
+            this.totalRandomPicks = 0; // Track total random selections made
+
             this.isPlaying = false;
             this.isPaused = false;
             this.isGameOver = false;
@@ -842,15 +880,31 @@
             Logger.info('Hard drop performed', { distance: dropDistance });
         }
 
-        generateRandomPiece() {
-            const types = Object.keys(GameConfig.SHAPES);
-            const type = types[Math.floor(Math.random() * types.length)];
-            return new Piece(type);
-        }
+        generateRandomShapePiece() {
+                const types = Object.keys(GameConfig.SHAPES);
+                let selectedType;
+
+                // Generate 10 random picks and use the 10th one
+                for (let i = 0; i < 10; i++) {
+                    const randomType = types[Math.floor(Math.random() * types.length)];
+
+                    // Track every random pick in distribution statistics
+                    this.pieceStats[randomType] = (this.pieceStats[randomType] || 0) + 1;
+                    this.totalRandomPicks++;
+
+                    // Use the 10th pick as the selected piece
+                    if (i === 9) {
+                        selectedType = randomType;
+                    }
+                }
+
+                Logger.debug(`Generated piece: ${selectedType} (after 10 picks, total picks: ${this.totalRandomPicks})`);
+                return new Piece(selectedType);
+            }
 
         spawnNewPiece() {
-            this.currentPiece = this.nextPiece || this.generateRandomPiece();
-            this.nextPiece = this.generateRandomPiece();
+            this.currentPiece = this.nextPiece || this.generateRandomShapePiece();
+            this.nextPiece = this.generateRandomShapePiece();
             this.pieceCount++;
 
             if (!this.board.isValidPosition(this.currentPiece)) {
@@ -1138,6 +1192,16 @@
             document.getElementById('lines').textContent = this.lines;
             document.getElementById('level').textContent = this.level;
             document.getElementById('pieceCount').textContent = this.pieceCount;
+
+            // Update piece distribution statistics
+            document.getElementById('totalPicks').textContent = this.totalRandomPicks.toLocaleString();
+            document.getElementById('pieceI').textContent = this.pieceStats.I || 0;
+            document.getElementById('pieceO').textContent = this.pieceStats.O || 0;
+            document.getElementById('pieceT').textContent = this.pieceStats.T || 0;
+            document.getElementById('pieceS').textContent = this.pieceStats.S || 0;
+            document.getElementById('pieceZ').textContent = this.pieceStats.Z || 0;
+            document.getElementById('pieceJ').textContent = this.pieceStats.J || 0;
+            document.getElementById('pieceL').textContent = this.pieceStats.L || 0;
         }
 
         updateHighScore() {
